@@ -1,14 +1,39 @@
 import java.io.*;
+import twitter4j.Status;
+import twitter4j.Twitter;
+import twitter4j.TwitterException;
+import twitter4j.TwitterFactory;
+import twitter4j.auth.AccessToken;
+import twitter4j.User;
+import twitter4j.ResponseList;
+import twitter4j.Paging;
 
 class typing{
 	public static void main(String[] args){
+
+		Twitter twitter = new TwitterFactory().getInstance();
+
+		/*
 		Words word = new Words();
 		Game game = new Game(word);
 
 		long startTime = System.nanoTime();
 		game.start();
 		long endTime = System.nanoTime();
-		System.out.println("your time is " + (endTime - startTime));
+		long time = endTime - startTime;
+
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+		try{
+			System.out.println("input your name");
+			String name = reader.readLine();
+			Player player = new Player(name, time);
+
+			System.out.println("time: " + player.getTime());
+
+		}catch(IOException e){
+			System.out.println("error");
+		}
+		*/
 
 	}
 }
@@ -75,7 +100,7 @@ class Game{
 	}
 
 	void start(){
-			BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		try{
 			System.out.println("type 10 words!");
 
@@ -114,10 +139,26 @@ class Player{
 		this.time = time;
 	}
 
+	String getName(){
+		return name;
+	} 
+
+	long getTime(){
+		return time;
+	}
+
 }
 
 class Rank{
 	Player[] rank = new Player[10];
+
+	Rank(Player[] rank){
+		this.rank = rank;	
+	}
+
+	Player[] getRank(){
+		return rank;	
+	}
 
 }
 
