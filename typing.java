@@ -1,4 +1,8 @@
+package typing;
+
 import java.io.*;
+import java.util.*;
+
 import twitter4j.Status;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
@@ -7,16 +11,20 @@ import twitter4j.auth.AccessToken;
 import twitter4j.User;
 import twitter4j.ResponseList;
 import twitter4j.Paging;
+import twitter4j.Query;
+import twitter4j.QueryResult;
+	
 
 class typing{
 	public static void main(String[] args){
+			  
+		//Words words = new Words();
+		TweetWords words = new TweetWords();
+		Game game = new Game(words);
+		
+		//System.out.println(words.getWord());
 
-		Twitter twitter = new TwitterFactory().getInstance();
-
-		/*
-		Words word = new Words();
-		Game game = new Game(word);
-
+		
 		long startTime = System.nanoTime();
 		game.start();
 		long endTime = System.nanoTime();
@@ -33,17 +41,21 @@ class typing{
 		}catch(IOException e){
 			System.out.println("error");
 		}
-		*/
+		
 
 	}
 }
 
 ////////////////////////////////////////
 
+//tweetでtypingしない場合のデフォルトのwords
 class Words{
+	
+	//words_arrayとarrayを対応付けてる
 	String words_array[] = new String[10];
-	static boolean[] array = new boolean[10];
+	boolean[] array = new boolean[10];
 
+	//コンストラクタ:デフォルトの単語をset
 	Words(){
 		words_array[0] = "hello";
 		words_array[1] = "world";
@@ -56,17 +68,10 @@ class Words{
 		words_array[8] = "int";
 		words_array[9] = "String";
 
-		for(int i = 0; i < array.length; i++){
-			array[i] = true;
-		}
+		makeAllTrue();
 	}
 
-	Words(String word, int i){
-		words_array[i] = word;
-
-		array[i] = true;
-	}
-
+	//アクセスメソッド:フィールドの単語を一個ずつ表示、使った単語をfalseに
 	String getWord(){
 		while(true){
 			int rand = (int)(Math.random() *  10);
@@ -77,6 +82,14 @@ class Words{
 		}
 	}
 
+	//arrayの中をTrueにするだけ
+	void makeAllTrue(){
+		for(int i = 0; i < array.length; i++){
+			array[i] = true;
+		}
+	}
+	
+	//typeミスした単語をtrueに戻すメソッド、なんか汚い
 	void makeArrayTrue(String word){
 		for(int i = 0; i < words_array.length; i++){
 			if(word.equals(words_array[i])){
@@ -87,11 +100,58 @@ class Words{
 
 }
 
+//tweetを取得、黒歴史度の高いtweetをset
 class TweetWords extends Words{
+	List<Status> statuses;
+
+	//コンストラクタ、本当は公開しちゃいけない
+	TweetWords(){
+		super();
+		try{
+			Twitter twitter = TwitterFactory.getSingleton();
+			twitter.setOAuthConsumer("1t6XCLxeRICJUl692UaP7CaNV","pmzXyUdaj2MYtzorJ1RHWHibqUwdZi44yB2P9Q7GF3sXM7vRus");
+			AccessToken accessToken = new AccessToken("2406573272-MJo4QovPMpdiFpO0U3jCLSWOv5KGV9vR507zfZI","u5im8xJhDvIm20boY0HcWgFH2cQdZMUcTUHOGznGv7kkZ");		 
+			twitter.setOAuthAccessToken(accessToken);
+			User user = twitter.verifyCredentials();
+			statuses = twitter.getUserTimeline();
+			
+			
+			int i = 0;
+			for(Status status : statuses){
+				words_array[i] = status.getText();
+				i++;
+				if(i == 9){
+					break;
+				}
+			}
+			
+			makeAllTrue();
+			
+			
+		}catch(TwitterException e){
+			System.out.println("twitter error");
+		}
+	}
+	
+	//黒歴史度の高いtweetを10個取得
+	@Override
+	String getWord(){
+		while(true){
+			int rand = (int)(Math.random() *  10);
+			if(array[rand] == true){
+				array[rand] = false;
+				return words_array[rand];
+			}
+			return "hoge";
+			
+		}
+		
+	}
+	
 
 }
 
-
+//ゲーム関係のクラス
 class Game{
 	Words word;
 
@@ -129,7 +189,7 @@ class Game{
 	}
 }
 
-
+//プレイヤーのtimeとかを保存したいコンストラクタ
 class Player{
 	String name;
 	long time; 
