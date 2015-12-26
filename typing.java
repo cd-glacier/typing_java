@@ -14,33 +14,27 @@ import twitter4j.Paging;
 import twitter4j.Query;
 import twitter4j.QueryResult;
 	
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 class typing{
 	public static void main(String[] args){
 			  
 		//Words words = new Words();
 		TweetWords words = new TweetWords();
+		Rank rank = new Rank();
 		Game game = new Game(words);
 		
-		//System.out.println(words.getWord());
-
 		
 		long startTime = System.nanoTime();
 		game.start();
 		long endTime = System.nanoTime();
 		long time = endTime - startTime;
+		rank.setRank(time);
 
-		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-		try{
-			System.out.println("input your name");
-			String name = reader.readLine();
-			Player player = new Player(name, time);
-
-			System.out.println("time: " + player.getTime());
-
-		}catch(IOException e){
-			System.out.println("error");
-		}
 		
 
 	}
@@ -50,7 +44,7 @@ class typing{
 
 //tweetでtypingしない場合のデフォルトのwords
 class Words{
-	
+	int num = 5;
 	//words_arrayとarrayを対応付けてる
 	String words_array[] = new String[10];
 	boolean[] array = new boolean[10];
@@ -74,7 +68,7 @@ class Words{
 	//アクセスメソッド:フィールドの単語を一個ずつ表示、使った単語をfalseに
 	String getWord(){
 		while(true){
-			int rand = (int)(Math.random() *  10);
+			int rand = (int)(Math.random() *  num);
 			if(array[rand] == true){
 				array[rand] = false;
 				return words_array[rand];
@@ -84,14 +78,14 @@ class Words{
 
 	//arrayの中をTrueにするだけ
 	void makeAllTrue(){
-		for(int i = 0; i < array.length; i++){
+		for(int i = 0; i < num; i++){
 			array[i] = true;
 		}
 	}
 	
 	//typeミスした単語をtrueに戻すメソッド、なんか汚い
 	void makeArrayTrue(String word){
-		for(int i = 0; i < words_array.length; i++){
+		for(int i = 0; i < num; i++){
 			if(word.equals(words_array[i])){
 				array[i] = true;
 			}
@@ -102,15 +96,19 @@ class Words{
 
 //tweetを取得、黒歴史度の高いtweetをset
 class TweetWords extends Words{
+	int num = 5;
 	List<Status> statuses;
+	//words_arrayとarrayを対応付けてる
+	//String words_array[] = new String[10];
+	//boolean[] array = new boolean[10];
 
-	//コンストラクタ、本当は公開しちゃいけない
+	//コンストラクタ、本当は公開しちゃいけない(捨て垢作った)
 	TweetWords(){
 		super();
 		try{
 			Twitter twitter = TwitterFactory.getSingleton();
-			twitter.setOAuthConsumer("1t6XCLxeRICJUl692UaP7CaNV","pmzXyUdaj2MYtzorJ1RHWHibqUwdZi44yB2P9Q7GF3sXM7vRus");
-			AccessToken accessToken = new AccessToken("2406573272-MJo4QovPMpdiFpO0U3jCLSWOv5KGV9vR507zfZI","u5im8xJhDvIm20boY0HcWgFH2cQdZMUcTUHOGznGv7kkZ");		 
+			twitter.setOAuthConsumer("qCwq7EbWWGileUmQXBAtpWZV6","9GEtTKe202apuu9q4yQ1zn3gNTu9dMphjItGSXJwwAt8jJyVUz");
+			AccessToken accessToken = new AccessToken("4653308594-jEvwFBMEP9Cr1oTzUFspSN1qxRn7dkXjwfRNafL","FoYAdnROch4ZscWrHbnhu9stZFyBbsTIZ2psawuGivybb");		 
 			twitter.setOAuthAccessToken(accessToken);
 			User user = twitter.verifyCredentials();
 			statuses = twitter.getUserTimeline();
@@ -118,15 +116,27 @@ class TweetWords extends Words{
 			
 			int i = 0;
 			for(Status status : statuses){
-				words_array[i] = status.getText();
+				String str = status.getText();
+				// ハッシュタグとURLの削除	
+				StringTokenizer sta = new StringTokenizer(str, " ");
+				//トークンの出力
+				while(sta.hasMoreTokens()) {
+					String wk = sta.nextToken();
+					if(wk.indexOf("#") == -1 && wk.indexOf("http") == -1
+							&& wk.indexOf("RT") == -1 && wk.indexOf("@") == -1 
+							&& wk.indexOf("\n") == -1 && wk.indexOf("(") == -1
+							&& wk.indexOf(")") == -1 ){
+						words_array[i] = wk;
+					}
+				}
+				
 				i++;
-				if(i == 9){
+				if(i == (num - 1)){
 					break;
 				}
 			}
 			
 			makeAllTrue();
-			
 			
 		}catch(TwitterException e){
 			System.out.println("twitter error");
@@ -137,12 +147,11 @@ class TweetWords extends Words{
 	@Override
 	String getWord(){
 		while(true){
-			int rand = (int)(Math.random() *  10);
+			int rand = (int)(Math.random() *  num);
 			if(array[rand] == true){
 				array[rand] = false;
 				return words_array[rand];
 			}
-			return "hoge";
 			
 		}
 		
@@ -153,6 +162,7 @@ class TweetWords extends Words{
 
 //ゲーム関係のクラス
 class Game{
+	int num = 5;
 	Words word;
 
 	Game(Words word){
@@ -162,26 +172,32 @@ class Game{
 	void start(){
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		try{
-			System.out.println("type 10 words!");
-
-			int i = 0;
-			while(i < 10){
-				String vocab = word.getWord();
-
-				System.out.println(vocab);
-
-				String input = reader.readLine();
-
-				if(input.equals(vocab)){
-					i++;
-					System.out.println("ok");
-				}else{
-					word.makeArrayTrue(vocab);
-					System.out.println("miss type");
+			System.out.println("type "+ String.valueOf(num) + " words!");
+			System.out.println("when you input \'start\', game start!");
+			
+			if(reader.readLine().equals("start")){
+				int i = 0;
+				while(i < num){
+					String vocab = word.getWord();
+	
+					System.out.println(vocab);
+	
+					String input = reader.readLine();
+	
+					if(input.equals(vocab)){
+						i++;
+						System.out.println("ok");
+					}else{
+						word.makeArrayTrue(vocab);
+						System.out.println("miss type");
+					}
 				}
 
+			}else{
+				
+				
+				
 			}
-
 		}catch(IOException e){
 			System.out.println("error");
 		}
@@ -189,7 +205,7 @@ class Game{
 	}
 }
 
-//プレイヤーのtimeとかを保存したいコンストラクタ
+//プレイヤーのnameとtimeとひとまとめにしたいだけ
 class Player{
 	String name;
 	long time; 
@@ -210,16 +226,71 @@ class Player{
 }
 
 class Rank{
-	Player[] rank = new Player[10];
-
-	Rank(Player[] rank){
-		this.rank = rank;	
+	
+	Rank(){	
+		
 	}
 
-	Player[] getRank(){
-		return rank;	
+	//MySQLに接続して、name,timeをinsertする.
+	void setRank(long time){
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+		try{
+			MySQL db = new MySQL();
+			System.out.println("input your name");
+			String name = reader.readLine();
+			Player player = new Player(name, time);
+			
+			db.insertDB(name, time);
+	
+			//System.out.println("time: " + player.getTime());
+	
+		}catch(IOException e){
+			System.out.println("error");
+		}
 	}
 
 }
 
+
+class MySQL{
+	Connection con = null;
+	
+	MySQL(){
+        try {
+            // JDBCドライバのロード
+            Class.forName("com.mysql.jdbc.Driver").newInstance();
+            // MySQLに接続
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/typing", "root", "");
+            System.out.println("MySQLに接続できました。");
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            System.out.println("JDBCドライバのロードに失敗しました。");
+        } catch (SQLException e) {
+            System.out.println("MySQLに接続できませんでした。");
+        }
+        /*finally {
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (SQLException e) {
+                    System.out.println("MySQLのクローズに失敗しました。");
+                }
+            }
+        }
+        */
+		
+	}
+	
+	void insertDB(String name,long time){
+		try{
+			Statement stm = con.createStatement();	
+	        String sql = "insert into players values(" + name + ',' + String.valueOf(time) + ')';
+	        int result = stm.executeUpdate(sql);	//errorrrrrrrrrrrrrrr
+	        System.out.println("更新件数は" + result + "です。");
+		}catch(SQLException e){
+			System.out.println("MySQLに接続できませんでした。");
+		}
+	}
+	
+	
+}
 
