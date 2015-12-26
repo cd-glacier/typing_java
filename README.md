@@ -8,13 +8,13 @@ tweetを取得してtweetをtypeさせるゲームにする予定
 
 #### twitter4j
 
->> http://twitter4j.org/ja/index.html 
+> http://twitter4j.org/ja/index.html 
 
 捨て垢 : @joushisu_e3
 
 #### MySQL
 
->> http://dev.mysql.com/
+> http://dev.mysql.com/
 
 DB name : typing
 
