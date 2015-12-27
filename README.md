@@ -20,5 +20,5 @@ DB name : typing
 
 table name : players
 
-shcema : name varchar(255), time int
+shcema : name varchar(255), time bigint
 
