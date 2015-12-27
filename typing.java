@@ -22,18 +22,43 @@ import java.sql.Statement;
 
 class typing{
 	public static void main(String[] args){
-			  
 		//Words words = new Words();
 		TweetWords words = new TweetWords();
 		Rank rank = new Rank();
+		//Time time = new Time();
+		int num = 5;
 		Game game = new Game(words);
 		
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+		try{
+			System.out.println("type "+ String.valueOf(num) + " words!");
+			System.out.println("when you input \'start\', game start!");
+			System.out.println("when you input \'rank\',  you can watch ranking");
+			
+			String input = reader.readLine();
+			if(input.equals("start")){
+				//time.startTime();
+				long startTime = System.nanoTime();
+				game.start();
+				//time.endTime();
+				long endTime = System.nanoTime();
+
+				//long long_time = time.getTime();
+				long long_time = endTime - startTime;
+				rank.setRank(long_time);
+				
+				rank.showRank();
+			}else if(input.equals("rank")){
+				System.out.println("hoge");
+				rank.showRank();
+			}else{
+				System.out.println("typing game end");
+			}
+		}catch(IOException e){
+			System.out.println(e.getMessage());
+			
+		}	
 		
-		long startTime = System.nanoTime();
-		game.start();
-		long endTime = System.nanoTime();
-		long time = endTime - startTime;
-		rank.setRank(time);
 
 		
 
@@ -143,7 +168,7 @@ class TweetWords extends Words{
 		}
 	}
 	
-	//黒歴史度の高いtweetを10個取得
+	//tweetを10個取得
 	@Override
 	String getWord(){
 		while(true){
@@ -152,9 +177,7 @@ class TweetWords extends Words{
 				array[rand] = false;
 				return words_array[rand];
 			}
-			
 		}
-		
 	}
 	
 
@@ -170,18 +193,15 @@ class Game{
 	}
 
 	void start(){
-		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in)); 
 		try{
-			System.out.println("type "+ String.valueOf(num) + " words!");
-			System.out.println("when you input \'start\', game start!");
-			
-			if(reader.readLine().equals("start")){
 				int i = 0;
 				while(i < num){
 					String vocab = word.getWord();
 	
 					System.out.println(vocab);
 	
+					System.out.print("->");
 					String input = reader.readLine();
 	
 					if(input.equals(vocab)){
@@ -192,12 +212,7 @@ class Game{
 						System.out.println("miss type");
 					}
 				}
-
-			}else{
 				
-				
-				
-			}
 		}catch(IOException e){
 			System.out.println("error");
 		}
@@ -226,16 +241,17 @@ class Player{
 }
 
 class Rank{
+	MySQL db;
 	
 	Rank(){	
-		
+		db = new MySQL();
 	}
 
 	//MySQLに接続して、name,timeをinsertする.
 	void setRank(long time){
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		try{
-			MySQL db = new MySQL();
+			
 			System.out.println("input your name");
 			String name = reader.readLine();
 			Player player = new Player(name, time);
@@ -247,6 +263,10 @@ class Rank{
 		}catch(IOException e){
 			System.out.println("error");
 		}
+	}
+	
+	void showRank(){
+		db.showDB();
 	}
 
 }
@@ -265,32 +285,80 @@ class MySQL{
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             System.out.println("JDBCドライバのロードに失敗しました。");
         } catch (SQLException e) {
-            System.out.println("MySQLに接続できませんでした。");
+            System.out.println(e.getMessage());
         }
-        /*finally {
+        /*
+        finally {
             if (con != null) {
                 try {
                     con.close();
                 } catch (SQLException e) {
-                    System.out.println("MySQLのクローズに失敗しました。");
+                    System.out.println(e.getMessage());
                 }
             }
         }
         */
+        
 		
 	}
 	
 	void insertDB(String name,long time){
 		try{
 			Statement stm = con.createStatement();	
-	        String sql = "insert into players values(" + name + ',' + String.valueOf(time) + ')';
-	        int result = stm.executeUpdate(sql);	//errorrrrrrrrrrrrrrr
-	        System.out.println("更新件数は" + result + "です。");
-		}catch(SQLException e){
-			System.out.println("MySQLに接続できませんでした。");
+	        String sql = "insert into players values(\"" + name + "\"," + String.valueOf(time) + ')';
+	        stm.executeUpdate(sql);
+	        System.out.println("正常にデータベースに挿入できました");
+	    }catch(SQLException e){
+			System.out.println(e.getMessage());
 		}
 	}
 	
+	void showDB(){
+		try{
+			Statement stm = con.createStatement();	
+	        String sql = "select * from players order by time asc";
+	        ResultSet rs = stm.executeQuery(sql);
+	        
+	        int i = 1;
+	        while(rs.next()){
+                String name = rs.getString("name");
+                String time = rs.getString("time");
+                //System.out.println("	name, time");
+                System.out.println(i + ":" + name + ", " + time);
+                i++;
+            }
+	    }catch(SQLException e){
+			System.out.println(e.getMessage());
+		}
+		
+	}	
+}
+
+/*なんか動かん
+class Time{
+	static long time;
+	static long startTime;
+	static long endTime;
+	
+	Time(){
+	}
+	
+	void startTime(){
+		startTime = System.nanoTime();
+	}
+	
+	void endTime(){
+		endTime = System.nanoTime();
+	}
+	
+	void setTime(){
+		time = endTime - startTime;
+	}
+	
+	long getTime(){
+		return time;
+	}
 	
 }
+*/
 
