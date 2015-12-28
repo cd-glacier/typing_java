@@ -25,7 +25,7 @@ class typing{
 		//Words words = new Words();
 		TweetWords words = new TweetWords();
 		Rank rank = new Rank();
-		//Time time = new Time();
+		Timer timer = new Timer();
 		int num = 5;
 		Game game = new Game(words);
 		
@@ -37,14 +37,15 @@ class typing{
 			
 			String input = reader.readLine();
 			if(input.equals("start")){
-				//time.startTime();
-				long startTime = System.nanoTime();
+				timer.startTime();
+				//long startTime = System.nanoTime();
 				game.start();
-				//time.endTime();
-				long endTime = System.nanoTime();
+				timer.endTime();
+				//long endTime = System.nanoTime();
 
-				//long long_time = time.getTime();
-				long long_time = endTime - startTime;
+				timer.setTime();
+				long long_time = timer.getTime();
+				//long long_time = endTime - startTime;
 				rank.setRank(long_time);
 				
 				rank.showRank();
@@ -334,13 +335,12 @@ class MySQL{
 	}	
 }
 
-/*なんか動かん
-class Time{
-	static long time;
-	static long startTime;
-	static long endTime;
+class Timer{
+	long time;
+	long startTime;
+	long endTime;
 	
-	Time(){
+	Timer(){
 	}
 	
 	void startTime(){
@@ -360,5 +360,5 @@ class Time{
 	}
 	
 }
-*/
+
 
