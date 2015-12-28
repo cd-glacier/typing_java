@@ -50,7 +50,6 @@ class typing{
 				
 				rank.showRank();
 			}else if(input.equals("rank")){
-				System.out.println("hoge");
 				rank.showRank();
 			}else{
 				System.out.println("typing game end");
@@ -283,6 +282,9 @@ class MySQL{
             // MySQLに接続
             con = DriverManager.getConnection("jdbc:mysql://localhost:3306/typing", "root", "");
             System.out.println("MySQLに接続できました。");
+            
+            makeDB();
+           
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
             System.out.println("JDBCドライバのロードに失敗しました。");
         } catch (SQLException e) {
@@ -301,6 +303,18 @@ class MySQL{
         */
         
 		
+	}
+
+	void makeDB(){
+		try{
+			Statement stm = con.createStatement();
+	        String sql = "create database IF NOT EXISTS typing";
+	        stm.executeUpdate(sql);
+	        sql = "create table IF NOT EXISTS players(name varchar(255), time bigint) ";
+	        stm.executeUpdate(sql);
+		}catch(SQLException e){
+			System.out.println(e.getMessage());
+		}
 	}
 	
 	void insertDB(String name,long time){
@@ -346,7 +360,7 @@ class Timer{
 	void startTime(){
 		startTime = System.nanoTime();
 	}
-	
+
 	void endTime(){
 		endTime = System.nanoTime();
 	}
